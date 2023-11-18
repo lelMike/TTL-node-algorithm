@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <string>
 
-#define MAX_EDGE 100
+#define MAX_EDGE 300
 
 using namespace std;
 
@@ -12,7 +12,7 @@ class Nodes {
 public:
     explicit Nodes(bool isDirectional = false);
     void print_matrix();
-    vector<int> search_TTL(vector<pair<long long int, int>> solve);
+    int max_subgraphs();
 
 private:
     bool node_matrix[MAX_EDGE][MAX_EDGE]{};
@@ -78,54 +78,34 @@ void Nodes::print_matrix() {
     cout << endl;
 }
 
-vector<int> Nodes::search_TTL(vector<pair<long long int, int>> solve){
-    vector<int> answer;
-    int n = 1234567789;
-    for(int i = 0; i < solve.size(); i++){
-        if(find(translate_to_real.begin(), translate_to_real.end(), solve[i].first) == translate_to_real.end()){
-            answer.emplace_back(translate_to_fake.size());
-        }
-        else {
-            if (solve[i].second == 0) {
-                answer.emplace_back(translate_to_real.size() - 1);
-            } else {
-                vector<pair<long long int, int>> queue;
-                queue.emplace_back(solve[i].first, 0);
-                int ttl = solve[i].second;
-                long long int seen[MAX_EDGE] = {queue.front().first};
-                int seen_i = 1;
-
-                while (queue.size() != 0) {
-                    long long int start_node = queue.front().first;
-                    if (queue.front().second < ttl) {
-                        for (int j = 0; j < n * 2; j++) {
-                            int ind_start_node = translate_to_fake[start_node];
-                            bool check = node_matrix[ind_start_node][j];
-                            bool isNodeSeen = false;
-                            if (check) {
-                                for (int k = 0; k < seen_i; ++k) {
-                                    if (seen[k] == translate_to_real[j]) {
-                                        isNodeSeen = true;
-                                        break;
-                                    }
-                                }
-
-                                if (!isNodeSeen) {
-                                    queue.emplace_back(translate_to_real[j], queue.front().second + 1);
-                                    seen[seen_i] = translate_to_real[j];
-                                    seen_i++;
-                                }
-                            }
-                        }
-                    }
-                    queue.erase(queue.begin());
-                }
-                answer.emplace_back(max(0, static_cast<int>(translate_to_real.size() - seen_i)));
-            }
-        }
+int Nodes::max_subgraphs(){
+    vector<char> unseen; int max = 0; vector<char> queue, buff_seen;
+    for(int i = 0; i < translate_to_real.size(); i++){
+        unseen.emplace_back(translate_to_real[i]);
     }
 
-    return answer;
+    while(!unseen.empty()){
+        max++;
+        queue.emplace_back(unseen.front());
+        while(!queue.empty()) {
+            char curr_node = queue.front();
+            buff_seen.emplace_back(curr_node);
+            unseen.erase(find(unseen.begin(), unseen.end(), curr_node));
+            queue.erase(queue.begin());
+            for (int j = 0; j < unseen.size(); j++) {
+                bool check = node_matrix[translate_to_fake[curr_node]][translate_to_fake[unseen[j]]];
+
+                if (check) {
+                    if (find(buff_seen.begin(), buff_seen.end(), translate_to_real[translate_to_fake[unseen[j]]]) == buff_seen.end()) {
+                        queue.emplace_back(translate_to_real[translate_to_fake[unseen[j]]]);
+                    }
+                }
+            }
+        }
+
+    }
+
+    return max;
 }
 
 int main() {
@@ -136,17 +116,8 @@ int main() {
 
         node.print_matrix();
 
-//        vector<pair<long long int, int>> solve;
-//        int x, y; cin >> x >> y;
-//        while(x != 0 || y != 0) {
-//            solve.emplace_back(x, y);
-//            cin >> x >> y;
-//        }
-//
-//        vector<int> answer = node.search_TTL(solve);
-//        for(int i = 0; i < answer.size(); i++){
-//            cout << "Case " << count++ << ": " << answer[i] << " nodes not reachable from node " << solve[i].first << " with TTL = " << solve[i].second << "." << endl;
-//        }
+        int answer = node.max_subgraphs();
+        cout << answer << endl;
 
         n--;
     }
