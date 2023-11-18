@@ -2,14 +2,15 @@
 #include <algorithm>
 #include <vector>
 #include <unordered_map>
+#include <string>
 
-#define MAX_EDGE 51
+#define MAX_EDGE 100
 
 using namespace std;
 
 class Nodes {
 public:
-    explicit Nodes(int n, bool isDirectional = false);
+    explicit Nodes(bool isDirectional = false);
     void print_matrix();
     vector<int> search_TTL(vector<pair<long long int, int>> solve);
 
@@ -17,22 +18,21 @@ private:
     bool node_matrix[MAX_EDGE][MAX_EDGE]{};
     bool isDirectional = false;
     int node_num = 0;
-    int n;
-    unordered_map<int, int> translate_to_fake;
-    vector<int> translate_to_real;
-    vector<pair<int, int>> pairs;
+    unordered_map<char, int> translate_to_fake;
+    vector<char> translate_to_real;
+    vector<pair<char, char>> pairs;
 };
 
-Nodes::Nodes(int n, bool isDirectional) {
-    this->n = n;
+Nodes::Nodes(bool isDirectional) {
     this->isDirectional = isDirectional;
     fill(&node_matrix[0][0], &node_matrix[0][0] + sizeof(node_matrix) / sizeof(bool), false);
+    char x, y;
+    string line;
+    string buffer; getline(cin, buffer);
+    getline(cin, line); x = line[0]; y = line[1];
+    pairs.emplace_back(x, y);
 
-    for (int i = 0; i < n; ++i) {
-        long long int x, y;
-        cin >> x >> y;
-        pairs.emplace_back(x, y);
-
+    while (pairs.back().first != '\000') {
         if(translate_to_fake.find(x) == translate_to_fake.end()){
             translate_to_real.emplace_back(x);
             translate_to_fake[x] = translate_to_real.size()-1;
@@ -49,7 +49,16 @@ Nodes::Nodes(int n, bool isDirectional) {
             node_matrix[translate_to_fake[x]][translate_to_fake[y]] = true;
             node_matrix[translate_to_fake[y]][translate_to_fake[x]] = true;
         }
+        getline(cin, line); x = line[0];
+        if(x == '\000'){
+            pairs.emplace_back('\000', '\000');
+        }
+        else{
+            y = line[1];
+            pairs.emplace_back(x, y);
+        }
     }
+    pairs.pop_back();
 }
 
 void Nodes::print_matrix() {
@@ -66,10 +75,12 @@ void Nodes::print_matrix() {
         }
         cout << endl;
     }
+    cout << endl;
 }
 
 vector<int> Nodes::search_TTL(vector<pair<long long int, int>> solve){
     vector<int> answer;
+    int n = 1234567789;
     for(int i = 0; i < solve.size(); i++){
         if(find(translate_to_real.begin(), translate_to_real.end(), solve[i].first) == translate_to_real.end()){
             answer.emplace_back(translate_to_fake.size());
@@ -120,21 +131,24 @@ vector<int> Nodes::search_TTL(vector<pair<long long int, int>> solve){
 int main() {
     int n, count = 1; cin >> n;
     while(n != 0) {
-        Nodes node(n);
+        char max_letter; cin >> max_letter;
+        Nodes node;
 
-        vector<pair<long long int, int>> solve;
-        int x, y; cin >> x >> y;
-        while(x != 0 || y != 0) {
-            solve.emplace_back(x, y);
-            cin >> x >> y;
-        }
+        node.print_matrix();
 
-        vector<int> answer = node.search_TTL(solve);
-        for(int i = 0; i < answer.size(); i++){
-            cout << "Case " << count++ << ": " << answer[i] << " nodes not reachable from node " << solve[i].first << " with TTL = " << solve[i].second << "." << endl;
-        }
+//        vector<pair<long long int, int>> solve;
+//        int x, y; cin >> x >> y;
+//        while(x != 0 || y != 0) {
+//            solve.emplace_back(x, y);
+//            cin >> x >> y;
+//        }
+//
+//        vector<int> answer = node.search_TTL(solve);
+//        for(int i = 0; i < answer.size(); i++){
+//            cout << "Case " << count++ << ": " << answer[i] << " nodes not reachable from node " << solve[i].first << " with TTL = " << solve[i].second << "." << endl;
+//        }
 
-        cin >> n;
+        n--;
     }
 
     return 0;
