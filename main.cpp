@@ -11,7 +11,7 @@ class Nodes {
 public:
     explicit Nodes(int n, bool isDirectional = false);
     void print_matrix();
-    vector<int> search_TTL(vector<pair<long long int, int>> solve);
+    int search_TTL(long long int num1, int num2);
 
 private:
     bool node_matrix[MAX_EDGE][MAX_EDGE]{};
@@ -68,73 +68,58 @@ void Nodes::print_matrix() {
     }
 }
 
-vector<int> Nodes::search_TTL(vector<pair<long long int, int>> solve){
-    vector<int> answer;
-    for(int i = 0; i < solve.size(); i++){
-        if(find(translate_to_real.begin(), translate_to_real.end(), solve[i].first) == translate_to_real.end()){
-            answer.emplace_back(translate_to_fake.size());
-        }
-        else {
-            if (solve[i].second == 0) {
-                answer.emplace_back(translate_to_real.size() - 1);
-            } else {
-                vector<pair<long long int, int>> queue;
-                queue.emplace_back(solve[i].first, 0);
-                int ttl = solve[i].second;
-                long long int seen[MAX_EDGE] = {queue.front().first};
-                int seen_i = 1;
-
-                while (queue.size() != 0) {
-                    long long int start_node = queue.front().first;
-                    if (queue.front().second < ttl) {
-                        for (int j = 0; j < n * 2; j++) {
-                            int ind_start_node = translate_to_fake[start_node];
-                            bool check = node_matrix[ind_start_node][j];
-                            bool isNodeSeen = false;
-                            if (check) {
-                                for (int k = 0; k < seen_i; ++k) {
-                                    if (seen[k] == translate_to_real[j]) {
-                                        isNodeSeen = true;
-                                        break;
-                                    }
-                                }
-
-                                if (!isNodeSeen) {
-                                    queue.emplace_back(translate_to_real[j], queue.front().second + 1);
-                                    seen[seen_i] = translate_to_real[j];
-                                    seen_i++;
-                                }
-                            }
-                        }
-                    }
-                    queue.erase(queue.begin());
-                }
-                answer.emplace_back(max(0, static_cast<int>(translate_to_real.size() - seen_i)));
-            }
-        }
+int Nodes::search_TTL(long long int num1, int num2){
+    if(find(translate_to_real.begin(), translate_to_real.end(), num1) == translate_to_real.end()){
+        return translate_to_fake.size();
+    }
+    if (num2 == 0) {
+        return (translate_to_real.size() - 1);
     }
 
-    return answer;
+    vector<pair<long long int, int>> queue;
+    queue.emplace_back(num1, 0);
+    int ttl = num2;
+    long long int seen[MAX_EDGE] = {queue.front().first};
+    int seen_i = 1;
+
+    while (queue.size() != 0) {
+        long long int start_node = queue.front().first;
+        if (queue.front().second < ttl) {
+            for (int j = 0; j < n * 2; j++) {
+                int ind_start_node = translate_to_fake[start_node];
+                bool check = node_matrix[ind_start_node][j];
+                bool isNodeSeen = false;
+                if (check) {
+                    for (int k = 0; k < seen_i; ++k) {
+                        if (seen[k] == translate_to_real[j]) {
+                            isNodeSeen = true;
+                            break;
+                        }
+                    }
+
+                    if (!isNodeSeen) {
+                        queue.emplace_back(translate_to_real[j], queue.front().second + 1);
+                        seen[seen_i] = translate_to_real[j];
+                        seen_i++;
+                    }
+                }
+            }
+        }
+        queue.erase(queue.begin());
+    }
+
+    return (max(0, static_cast<int>(translate_to_real.size() - seen_i)));
 }
 
 int main() {
-    int n, count = 1; cin >> n;
-    while(n != 0) {
+    int n, count = 1;
+    while(cin >> n && n) {
         Nodes node(n);
 
-        vector<pair<long long int, int>> solve;
-        int x, y; cin >> x >> y;
-        while(x != 0 || y != 0) {
-            solve.emplace_back(x, y);
-            cin >> x >> y;
+        long long int x; int y;
+        while(cin >> x >> y && (x != 0 || y != 0)) {
+            cout << "Case " << count++ << ": " << node.search_TTL(x, y) << " nodes not reachable from node " << x << " with TTL = " << y << "." << endl;
         }
-
-        vector<int> answer = node.search_TTL(solve);
-        for(int i = 0; i < answer.size(); i++){
-            cout << "Case " << count++ << ": " << answer[i] << " nodes not reachable from node " << solve[i].first << " with TTL = " << solve[i].second << "." << endl;
-        }
-
-        cin >> n;
     }
 
     return 0;
